@@ -16,7 +16,8 @@ COPY package.json bun.lock ./
 # Install packages, skip development dependencies to
 # keep the image small. Avoid logging too much and print the dependency
 # tree for debugging
-RUN bun install --production --frozen-lockfile \
+RUN rm -rf node_modules package-lock.json \
+ && bun install --production --frozen-lockfile \
  && echo "Installed Bun packages:" \
  && (bun pm ls || true) \
  && echo "Node.js version:" \
