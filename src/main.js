@@ -5,7 +5,6 @@ const { proxyConfiguration } = require('./proxyValidation');
 const { utils: { log } } = Apify;
 
 Apify.main(async () => {
-    // TODO: maxItems, extendedOutputFunction
     const input = await Apify.getInput();
     const { startURLs, hashtags, maxResultsPerPage } = input;
     if (!startURLs && !hashtags) {
@@ -43,6 +42,13 @@ Apify.main(async () => {
         launchContext: {
             useChrome: true,
             stealth: true,
+            launchOptions: {
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                ],
+            },
         },
         handlePageFunction: async (context) => {
             const { url, userData: { label } } = context.request;
