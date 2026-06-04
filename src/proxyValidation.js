@@ -27,6 +27,10 @@ const proxyConfiguration = async ({
     blacklist = ['GOOGLESERP'],
     hint = [],
 }) => {
+    if (!proxyConfig) {
+        return undefined;
+    }
+
     const configuration = await Apify.createProxyConfiguration(proxyConfig);
 
     // this works for custom proxyUrls
