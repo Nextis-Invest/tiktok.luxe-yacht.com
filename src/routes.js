@@ -6,20 +6,20 @@ exports.handleList = async ({ request, page }, requestQueue, maxResultsPerPage) 
     // Wait for the network to settle, initially there will be 36 videos loaded. There
     // are more with a scroll event - not implemented yet.
     await page.waitForNetworkIdle({
-        idleTime: 2000
+        idleTime: 2000,
     });
 
     // video-feed list
     let videoUrls = await page.$$eval('main .video-feed-item', (els) => els.reduce((total, video) => {
-           total.push(video.querySelector('a')?.getAttribute('href'));
-           return total;
+        total.push(video.querySelector('a')?.getAttribute('href'));
+        return total;
     }, []).filter((videoUrl) => videoUrl));
 
-    log.info(`[SEARCH VIDEOS]: Found ${videoUrls.length} videos.`)
+    log.info(`[SEARCH VIDEOS]: Found ${videoUrls.length} videos.`);
     if (maxResultsPerPage !== undefined && maxResultsPerPage !== 0) {
         videoUrls = videoUrls.splice(0, maxResultsPerPage);
     }
-    log.info(`[SEARCH VIDEOS]: Adding ${videoUrls.length} videos to queue.`)
+    log.info(`[SEARCH VIDEOS]: Adding ${videoUrls.length} videos to queue.`);
 
     if (request.url.includes('tag')) {
         // hashtag url
@@ -47,10 +47,10 @@ exports.handleList = async ({ request, page }, requestQueue, maxResultsPerPage) 
                             header,
                             videoUrl,
                         },
-                        uniqueKey:matchVideoId[0],
+                        uniqueKey: matchVideoId[0],
                     });
                 } else {
-                    throw new Error ('The video has no id defined.');
+                    throw new Error('The video has no id defined.');
                 }
             } else {
                 throw new Error('User url was not found in video url.');
@@ -82,7 +82,7 @@ exports.handleUser = async ({ request, page }, requestQueue) => {
             header: request.userData.header,
             userInfo,
         },
-    }, {forefront: true});
+    }, { forefront: true });
 };
 
 exports.handleVideo = async ({ request, page }) => {
@@ -125,7 +125,7 @@ exports.handleVideo = async ({ request, page }) => {
 };
 
 const getUserInfo = async (page, url) => {
-    return page.evaluate((url) => {
+    return page.evaluate((userPageUrl) => {
         const shareLinks = [];
         if (document.querySelector('.share-links')) {
             [...document.querySelector('.share-links')
@@ -136,7 +136,7 @@ const getUserInfo = async (page, url) => {
         }
 
         return {
-            userUrl: url,
+            userUrl: userPageUrl,
             following: document.querySelector('.count-infos [title="Following"]').innerText,
             followers: document.querySelector('.count-infos [title="Followers"]').innerText,
             userTotalLikes: document.querySelector('.count-infos [title="Likes"]').innerText,

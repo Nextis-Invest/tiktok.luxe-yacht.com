@@ -1,9 +1,10 @@
 {
 	"name": "TikTokScraper",
 	"version": "0.0.1",
-	"description": "This is a boilerplate of an Apify actor.",
+	"description": "HTTP wrapper for jfyne/Tiktok-Scraper.",
 	"dependencies": {
 		"apify": "^2.0.0",
+		"express": "^4.19.2",
 		"puppeteer": "^10.4.0"
 	},
 	"devDependencies": {
@@ -11,7 +12,8 @@
 		"eslint": "^7.0.0"
 	},
 	"scripts": {
-		"start": "node src/main.js",
+		"actor": "node src/main.js",
+		"start": "node src/server.js",
 		"lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx",
 		"lint:fix": "./node_modules/.bin/eslint ./src --ext .js,.jsx --fix",
 		"test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
