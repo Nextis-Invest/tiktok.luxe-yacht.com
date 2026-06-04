@@ -1,6 +1,7 @@
 .git
 node_modules
 npm-debug.log
+bun-debug.log
 apify_storage
 storage
 .DS_Store

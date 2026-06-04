@@ -1,25 +1,31 @@
 # First, specify the base Docker image. You can read more about
 # the available images at https://sdk.apify.com/docs/guides/docker-images
 # You can also use any other image from Docker Hub.
+FROM oven/bun:1.3.10 AS bun
+
 FROM apify/actor-node-puppeteer-chrome:16
 
 USER root
 
-# Second, copy just package.json and package-lock.json since it should be
-# the only file that affects "npm install" in the next step, to speed up the build
-COPY package*.json ./
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
-# Install NPM packages, skip optional and development dependencies to
+# Second, copy just package.json and bun.lock since they should be
+# the only files that affect dependency installation in the next step.
+COPY package.json bun.lock ./
+
+# Install packages, skip development dependencies to
 # keep the image small. Avoid logging too much and print the dependency
 # tree for debugging
-RUN npm --quiet set progress=false \
- && npm ci --omit=dev --omit=optional --unsafe-perm=true \
- && echo "Installed NPM packages:" \
- && (npm list || true) \
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential python3 \
+ && rm -rf /var/lib/apt/lists/* \
+ && bun install --production --frozen-lockfile \
+ && echo "Installed Bun packages:" \
+ && (bun pm ls || true) \
  && echo "Node.js version:" \
  && node --version \
- && echo "NPM version:" \
- && npm --version \
+ && echo "Bun version:" \
+ && bun --version \
  && chown -R myuser:myuser /home/myuser
 
 # Next, copy the remaining files and directories with the source code.
@@ -31,4 +37,4 @@ USER myuser
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["bun", "run", "start"]

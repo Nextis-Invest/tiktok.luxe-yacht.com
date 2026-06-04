@@ -25,7 +25,7 @@ The service runs the upstream Apify actor in isolated local storage for each req
 
 ## Deployment
 
-Coolify should build this repository with the Dockerfile build pack.
+Coolify should build this repository with the Dockerfile build pack. Dependencies are installed with Bun.
 
 ```text
 Port: 3000
