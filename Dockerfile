@@ -16,10 +16,7 @@ COPY package.json bun.lock ./
 # Install packages, skip development dependencies to
 # keep the image small. Avoid logging too much and print the dependency
 # tree for debugging
-RUN apt-get update \
- && apt-get install -y --no-install-recommends build-essential python3 \
- && rm -rf /var/lib/apt/lists/* \
- && bun install --production --frozen-lockfile \
+RUN bun install --production --frozen-lockfile \
  && echo "Installed Bun packages:" \
  && (bun pm ls || true) \
  && echo "Node.js version:" \
