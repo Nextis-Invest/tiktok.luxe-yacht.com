@@ -1,4 +1,5 @@
 const Apify = require('apify');
+const { getHashtagVideos } = require('./tikwm');
 
 const { utils: { log } } = Apify;
 
@@ -9,11 +10,7 @@ exports.handleList = async ({ request, page }, requestQueue, maxResultsPerPage) 
         idleTime: 2000,
     });
 
-    // video-feed list
-    let videoUrls = await page.$$eval('main .video-feed-item', (els) => els.reduce((total, video) => {
-        total.push(video.querySelector('a')?.getAttribute('href'));
-        return total;
-    }, []).filter((videoUrl) => videoUrl));
+    let videoUrls = await extractVideoUrls(page);
 
     log.info(`[SEARCH VIDEOS]: Found ${videoUrls.length} videos.`);
     if (maxResultsPerPage !== undefined && maxResultsPerPage !== 0) {
@@ -22,6 +19,16 @@ exports.handleList = async ({ request, page }, requestQueue, maxResultsPerPage) 
     log.info(`[SEARCH VIDEOS]: Adding ${videoUrls.length} videos to queue.`);
 
     if (request.url.includes('tag')) {
+        if (!videoUrls.length) {
+            const hashtag = request.url.split('/tag/')[1]?.split(/[?#/]/)[0];
+            const fallbackVideos = await getHashtagVideos(decodeURIComponent(hashtag || ''), maxResultsPerPage);
+            log.info(`[SEARCH VIDEOS]: TikWM fallback found ${fallbackVideos.length} videos.`);
+            for (const video of fallbackVideos) {
+                await Apify.pushData(video);
+            }
+            return;
+        }
+
         // hashtag url
         const header = await page.evaluate(() => {
             return {
@@ -71,6 +78,43 @@ exports.handleList = async ({ request, page }, requestQueue, maxResultsPerPage) 
         }
     }
 };
+
+async function extractVideoUrls(page) {
+    return page.evaluate(() => {
+        const urls = new Set();
+        const collectVideoUrls = (value) => {
+            if (!value || typeof value !== 'object') return;
+            if (Array.isArray(value)) {
+                value.forEach((item) => collectVideoUrls(item));
+                return;
+            }
+
+            const id = value.id || value.videoId || value.video_id;
+            const author = value.author || value.authorInfo;
+            const username = author?.uniqueId || author?.unique_id || value.authorUniqueId || value.author_unique_id;
+            if (id && username) {
+                urls.add(`https://www.tiktok.com/@${username}/video/${id}`);
+            }
+
+            Object.values(value).forEach((item) => collectVideoUrls(item));
+        };
+
+        for (const link of document.querySelectorAll('a[href*="/video/"]')) {
+            const href = link.href || link.getAttribute('href');
+            if (href) urls.add(new URL(href, window.location.origin).href);
+        }
+
+        for (const script of document.querySelectorAll('script[type="application/json"]')) {
+            try {
+                collectVideoUrls(JSON.parse(script.textContent));
+            } catch (error) {
+                // Ignore non-hydration JSON scripts.
+            }
+        }
+
+        return [...urls];
+    });
+}
 
 exports.handleUser = async ({ request, page }, requestQueue) => {
     const userInfo = await getUserInfo(page, request.url);

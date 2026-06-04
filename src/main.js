@@ -23,10 +23,9 @@ Apify.main(async () => {
     const requestQueue = await Apify.openRequestQueue();
     if (hashtags) {
         for (const hashtag of hashtags) {
-            // remove all white spaces from hashtag
-            hashtag.replaceAll(/\s/g, '');
+            const normalizedHashtag = hashtag.replace(/\s/g, '');
             await requestQueue.addRequest({
-                url: `https://www.tiktok.com/tag/${hashtag}`,
+                url: `https://www.tiktok.com/tag/${normalizedHashtag}`,
             });
         }
     }
