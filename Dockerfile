@@ -7,19 +7,20 @@ USER root
 
 # Second, copy just package.json and package-lock.json since it should be
 # the only file that affects "npm install" in the next step, to speed up the build
-COPY --chown=myuser:myuser package*.json ./
+COPY package*.json ./
 
 # Install NPM packages, skip optional and development dependencies to
 # keep the image small. Avoid logging too much and print the dependency
 # tree for debugging
 RUN npm --quiet set progress=false \
- && npm ci --omit=dev --omit=optional \
+ && npm ci --omit=dev --omit=optional --unsafe-perm=true \
  && echo "Installed NPM packages:" \
  && (npm list || true) \
  && echo "Node.js version:" \
  && node --version \
  && echo "NPM version:" \
- && npm --version
+ && npm --version \
+ && chown -R myuser:myuser /home/myuser
 
 # Next, copy the remaining files and directories with the source code.
 # Since we do this after NPM install, quick build will be really fast
